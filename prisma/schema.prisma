@@ -22,6 +22,7 @@ model User {
   hash        String
   hashRt      String?
   Transaction Transaction[]
+  Card        Card[]
 
   @@map("users")
 }
@@ -41,6 +42,9 @@ model Transaction {
   categoryId Int?
   category   Category? @relation(fields: [categoryId], references: [id])
 
+  cardId Int?
+  card   Card? @relation(fields: [cardId], references: [id])
+
   @@map("transactions")
 }
 
@@ -49,15 +53,35 @@ model Category {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  name String @unique
-  type         TransactionType
+  name String          @unique
+  type TransactionType
 
   transactions Transaction[]
 
   @@map("categories")
 }
 
+model Card {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  digits    String   @unique
+  balance   Decimal  @default(0.0)
+  type      CardType @default(VISA)
+
+  userId       Int
+  user         User          @relation(fields: [userId], references: [id])
+  transactions Transaction[]
+
+  @@map("cards")
+}
+
 enum TransactionType {
   INCOME
   EXPENSE
+}
+
+enum CardType {
+  VISA
+  MC
 }

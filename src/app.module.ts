@@ -7,9 +7,18 @@ import { AtGuard } from './common/guards';
 import { AppService } from './app.service';
 import { OperationsModule } from './operations/operations.module';
 import { CategoryModule } from './category/category.module';
+import { StatementsModule } from './statements/statements/statements.module';
+import { CardModule } from './card/card.module';
 
 @Module({
-  imports: [AuthModule, PrismaModule, OperationsModule, CategoryModule],
+  imports: [
+    AuthModule,
+    PrismaModule,
+    OperationsModule,
+    CategoryModule,
+    StatementsModule,
+    CardModule,
+  ],
   controllers: [AppController],
   providers: [
     AppService,

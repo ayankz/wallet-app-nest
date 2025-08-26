@@ -8,19 +8,59 @@ export class OperationsService {
   constructor(private prisma: PrismaService) {}
 
   async create(userId: number, dto: CreateOperationDto) {
-    return this.prisma.transaction.create({
-      data: {
-        ...dto,
-        type: dto.type,
-        userId,
-      },
+    return this.prisma.$transaction(async (tx) => {
+      if (dto.cardId) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+        const card = await tx.card.findUnique({
+          where: { id: dto.cardId },
+        });
+
+        if (!card) {
+          throw new Error('Card not found');
+        }
+      }
+      const transaction = await tx.transaction.create({
+        data: {
+          ...dto,
+          userId,
+        },
+      });
+
+      // если транзакция привязана к карте -> обновляем баланс
+      if (dto.cardId) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+        await tx.card.update({
+          where: { id: dto.cardId },
+          data: {
+            balance:
+              dto.type === 'INCOME'
+                ? { increment: dto.amount }
+                : { decrement: dto.amount },
+          },
+        });
+      }
+
+      return transaction;
     });
   }
 
   async findAll(userId: number) {
-    return this.prisma.transaction.findMany({
+    return await this.prisma.transaction.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
+      include: {
+        category: {
+          select: {
+            name: true,
+          },
+        },
+        card: {
+          select: {
+            digits: true,
+            type: true,
+          },
+        },
+      },
     });
   }
 
