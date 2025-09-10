@@ -31,8 +31,11 @@ export class CardController {
     return this.cardService.updateCard(Number(cardId), dto);
   }
 
-  @Delete(':cardId/:userId')
-  deleteCard(@Param('cardId') cardId: string, @Param('userId') userId: string) {
+  @Delete(':cardId')
+  deleteCard(
+    @Param('cardId') cardId: string,
+    @GetCurrentUserId() userId: number,
+  ) {
     return this.cardService.deleteCard(Number(cardId), Number(userId));
   }
 }
