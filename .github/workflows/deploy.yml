@@ -1,4 +1,4 @@
-name: CI/CD: Build → ECR → Deploy to EC2
+name: "CI/CD: Build → ECR → Deploy to EC2"
 
 on:
   push:
