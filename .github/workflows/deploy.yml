@@ -55,6 +55,9 @@ jobs:
     needs: build_and_push
     runs-on: ubuntu-latest
     steps:
+      - name: Debug IMAGE_URI
+        run: echo "IMAGE_URI=${{ needs.build_and_push.outputs.image_uri }}"
+        
       - name: Deploy on EC2 via SSH
         uses: appleboy/ssh-action@v0.1.10
         with:
