@@ -47,46 +47,51 @@ jobs:
           docker push $IMAGE_URI:${{ env.IMAGE_TAG }}
           docker push $IMAGE_URI:latest
 
-      - name: Export image uri
-        id: set_image
-        run: echo "image_uri=${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}" >> $GITHUB_OUTPUT
+      - name: Save image_uri to file
+        run: echo "${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:${{ github.sha }}" > image_uri.txt
 
-      - name: Log image uri
-        run: echo "EXPORTED ${{ steps.set_image.outputs.image_uri }}"
+      - name: Upload image_uri artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: image_uri
+          path: image_uri.txt
+
   deploy:
     needs: build_and_push
     runs-on: ubuntu-latest
     steps:
-      - name: Debug IMAGE_URI
-        run: echo "IMAGE_URI=${{ needs.build_and_push.outputs.image_uri }}"
+      - name: Download image_uri artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: image_uri
 
-    #   - name: Deploy on EC2 via SSH
-    #     uses: appleboy/ssh-action@v0.1.10
-    #     env:
-    #         IMAGE_URI: ${{ needs.build_and_push.outputs.image_uri }}
-    #         AWS_REGION: ${{ env.AWS_REGION }}
-    #         AWS_ACCOUNT_ID: ${{ env.AWS_ACCOUNT_ID }}
-    #     with:
-    #       host: ${{ secrets.EC2_HOST }}
-    #       username: ${{ secrets.EC2_USER }}
-    #       key: ${{ secrets.EC2_SSH_KEY }}
-    #       script: |
-    #         set -e
-    #         echo "Using IMAGE_URI=$IMAGE_URI"
+      - name: Read image_uri
+        id: read_image
+        run: echo "IMAGE_URI=$(cat image_uri.txt)" >> $GITHUB_ENV
 
-    #         # install docker if missing
-    #         if ! command -v docker >/dev/null 2>&1; then
-    #           sudo dnf -y update
-    #           sudo dnf -y install docker
-    #           sudo systemctl enable --now docker
-    #         fi
+      - name: Deploy on EC2 via SSH
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -e
+            echo "Using IMAGE_URI=$IMAGE_URI"
 
-    #         # login to ECR
-    #         aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
-    #           sudo docker login --username AWS --password-stdin ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
+            # install docker if missing
+            if ! command -v docker >/dev/null 2>&1; then
+              sudo dnf -y update
+              sudo dnf -y install docker
+              sudo systemctl enable --now docker
+            fi
 
-    #         # pull & restart container
-    #         sudo docker pull $IMAGE_URI
-    #         sudo docker stop nest-backend || true
-    #         sudo docker rm nest-backend || true
-    #         sudo docker run -d --name nest-backend -p 3000:3000 --restart unless-stopped $IMAGE_URI
+            # login to ECR
+            aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
+              sudo docker login --username AWS --password-stdin ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
+
+            # pull & restart container
+            sudo docker pull $IMAGE_URI
+            sudo docker stop nest-backend || true
+            sudo docker rm nest-backend || true
+            sudo docker run -d --name nest-backend -p 3000:3000 --restart unless-stopped $IMAGE_URI
