@@ -72,8 +72,10 @@ jobs:
         id: read_image
         run: |
           IMAGE_URI=$(cat image_uri.txt)
-          echo "IMAGE_URI=$IMAGE_URI"
-          echo "After setting env, IMAGE_URI is: ${{ env.IMAGE_URI }}"
+          echo "IMAGE_URI=$IMAGE_URI" >> $GITHUB_ENV
+          
+          # Отладочная команда для проверки переменной окружения
+          echo "Debug: IMAGE_URI is set to ${{ env.IMAGE_URI }}"
 
       - name: Deploy on EC2 via SSH
         uses: appleboy/ssh-action@v0.1.10
