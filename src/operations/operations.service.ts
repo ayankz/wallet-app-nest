@@ -10,6 +10,7 @@ export class OperationsService {
   async create(userId: number, dto: CreateOperationDto) {
     return this.prisma.$transaction(async (tx) => {
       if (dto.cardId) {
+        console.log(dto.cardId);
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
         const card = await tx.card.findUnique({
           where: { id: dto.cardId },
