@@ -1,8 +1,8 @@
-name: "CI/CD: Build → ECR → Deploy to EC2"
+name: 'CI/CD: Build → ECR → Deploy to EC2'
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
 
 env:
   AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
@@ -55,18 +55,19 @@ jobs:
     needs: build_and_push
     runs-on: ubuntu-latest
     steps:
-      - name: Debug IMAGE_URI
-        run: echo "IMAGE_URI=${{ needs.build_and_push.outputs.image_uri }}"
-        
       - name: Deploy on EC2 via SSH
         uses: appleboy/ssh-action@v0.1.10
+        env:
+            IMAGE_URI: ${{ needs.build_and_push.outputs.image_uri }}
+            AWS_REGION: ${{ env.AWS_REGION }}
+            AWS_ACCOUNT_ID: ${{ env.AWS_ACCOUNT_ID }}
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             set -e
-            IMAGE_URI=${{ needs.build_and_push.outputs.image_uri }}
+            echo "Using IMAGE_URI=$IMAGE_URI"
 
             # install docker if missing
             if ! command -v docker >/dev/null 2>&1; then
