@@ -9,7 +9,7 @@ import { OperationsModule } from './operations/operations.module';
 import { CategoryModule } from './category/category.module';
 import { StatementsModule } from './statements/statements/statements.module';
 import { CardModule } from './card/card.module';
-
+import { ConfigModule } from '@nestjs/config';
 @Module({
   imports: [
     AuthModule,
@@ -18,6 +18,11 @@ import { CardModule } from './card/card.module';
     CategoryModule,
     StatementsModule,
     CardModule,
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath:
+        process.env.NODE_ENV === 'production' ? '.env.production' : '.env',
+    }),
   ],
   controllers: [AppController],
   providers: [

@@ -75,7 +75,7 @@ jobs:
           echo "IMAGE_URI=$IMAGE_URI" >> $GITHUB_ENV
           
           # Отладочная команда для проверки переменной окружения
-          echo "Debug: IMAGE_URI is set to ${{ env.IMAGE_URI }}"
+          echo "Debug: IMAGE_URI is set to $IMAGE_URI"
 
       - name: Deploy on EC2 via SSH
         uses: appleboy/ssh-action@v0.1.10
