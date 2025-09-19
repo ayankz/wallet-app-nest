@@ -97,6 +97,7 @@ jobs:
           script: |
             set -e
             echo "Using IMAGE_URI=$IMAGE_URI"
+            echo "Using DATABASE_URL=$DATABASE_URL" # Теперь будет выводиться значение
             
             # install docker if missing
             if ! command -v docker >/dev/null 2>&1; then
