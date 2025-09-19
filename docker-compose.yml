@@ -1,22 +1,22 @@
-version: '3'
-services:
-  db:
-    image: postgres:12
-    ports:
-    - 5432:5432
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 123
-      POSTGRES_DB: nestjs
-  minio:
-    image: minio/minio:latest
-    container_name: tracker_minio
-    ports:
-    - 9000:9000
-    - "9001:9001"
-    environment:
-      MINIO_ROOT_USER: admin
-      MINIO_ROOT_PASSWORD: password123
-    volumes:
-      - ./minio-data:/data
-    command: server /data --console-address ":9001"
+# version: '3'
+# services:
+#   db:
+#     image: postgres:12
+#     ports:
+#     - 5432:5432
+#     environment:
+#       POSTGRES_USER: postgres
+#       POSTGRES_PASSWORD: 123
+#       POSTGRES_DB: nestjs
+#   minio:
+#     image: minio/minio:latest
+#     container_name: tracker_minio
+#     ports:
+#     - 9000:9000
+#     - "9001:9001"
+#     environment:
+#       MINIO_ROOT_USER: admin
+#       MINIO_ROOT_PASSWORD: password123
+#     volumes:
+#       - ./minio-data:/data
+#     command: server /data --console-address ":9001"
