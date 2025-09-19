@@ -78,7 +78,11 @@ jobs:
           
           # Отладочная команда для проверки переменной окружения
           echo "Debug: IMAGE_URI is set to $IMAGE_URI"
-
+      
+      - name: Login to ECR
+        run: |
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
+            docker login --username AWS --password-stdin ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
       - name: Run Prisma Migrations
         run: |
           IMAGE_URI=$(cat image_uri.txt)
