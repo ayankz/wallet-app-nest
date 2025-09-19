@@ -81,11 +81,12 @@ jobs:
 
       - name: Run Prisma Migrations
         run: |
+          IMAGE_URI=$(cat image_uri.txt)
           docker run --rm \
           -e DATABASE_URL=${{ secrets.DATABASE_URL }} \
-          ${{ needs.build_and_push.outputs.image_uri }} \
+          $IMAGE_URI \
           npx prisma migrate deploy
-          
+
       - name: Deploy on EC2 via SSH
         uses: appleboy/ssh-action@v0.1.10
         with:
