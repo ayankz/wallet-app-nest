@@ -29,8 +29,8 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 
-# Устанавливаем только prod-зависимости
-RUN npm ci --omit=dev
+# # Устанавливаем только prod-зависимости
+# RUN npm ci --omit=dev
 
 # Запуск приложения
 CMD ["node", "dist/main.js"]
