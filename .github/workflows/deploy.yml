@@ -59,12 +59,12 @@ jobs:
   deploy:
     needs: build_and_push
     runs-on: ubuntu-latest
-    env:
-      DATABASE_URL: ${{secrets.DATABASE_URL}}
-      AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-      AWS_REGION: us-east-1
-      ECR_REPOSITORY: expense-tracker-nest
-      IMAGE_TAG: ${{ github.sha }}
+    # env:
+    #   DATABASE_URL: ${{secrets.DATABASE_URL}}
+    #   AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+    #   AWS_REGION: us-east-1
+    #   ECR_REPOSITORY: expense-tracker-nest
+    #   IMAGE_TAG: ${{ github.sha }}
     steps:
       - name: Download image_uri artifact
         uses: actions/download-artifact@v4
@@ -89,16 +89,12 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          envs: |
-            DATABASE_URL=${{ secrets.DATABASE_URL }}
-            IMAGE_URI=${{ env.IMAGE_URI }}
-            AWS_REGION=${{ env.AWS_REGION }}
-            AWS_ACCOUNT_ID=${{ env.AWS_ACCOUNT_ID }}
+          envs: IMAGE_URI=${{ env.IMAGE_URI }},AWS_REGION=${{ env.AWS_REGION }},AWS_ACCOUNT_ID=${{ env.AWS_ACCOUNT_ID }},DATABASE_URL=${{ secrets.DATABASE_URL }}
           script: |
             set -e
             echo "Using IMAGE_URI=$IMAGE_URI"
             echo "Using DATABASE_URL=$DATABASE_URL" # Теперь будет выводиться значение
-            
+
             # install docker if missing
             if ! command -v docker >/dev/null 2>&1; then
               sudo dnf -y update
