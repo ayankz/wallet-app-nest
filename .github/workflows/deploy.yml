@@ -79,6 +79,13 @@ jobs:
           # Отладочная команда для проверки переменной окружения
           echo "Debug: IMAGE_URI is set to $IMAGE_URI"
 
+      - name: Run Prisma Migrations
+        run: |
+          docker run --rm \
+          -e DATABASE_URL=${{ secrets.DATABASE_URL }} \
+          ${{ needs.build_and_push.outputs.image_uri }} \
+          npx prisma migrate deploy
+          
       - name: Deploy on EC2 via SSH
         uses: appleboy/ssh-action@v0.1.10
         with:
