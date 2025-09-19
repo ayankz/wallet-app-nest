@@ -106,4 +106,4 @@ jobs:
             sudo docker pull $IMAGE_URI
             sudo docker stop nest-backend || true
             sudo docker rm nest-backend || true
-            sudo docker run -d --name nest-backend -p 3000:3000 --restart unless-stopped -e DATABASE_URL=$DATABASE_URL $IMAGE_URI
+            sudo docker run -d --name nest-backend -p 3000:3333 --restart unless-stopped -e DATABASE_URL=$DATABASE_URL $IMAGE_URI
