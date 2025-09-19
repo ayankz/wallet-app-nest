@@ -7,7 +7,7 @@ import { AtGuard } from './common/guards';
 import { AppService } from './app.service';
 import { OperationsModule } from './operations/operations.module';
 import { CategoryModule } from './category/category.module';
-import { StatementsModule } from './statements/statements/statements.module';
+// import { StatementsModule } from './statements/statements/statements.module';
 import { CardModule } from './card/card.module';
 import { ConfigModule } from '@nestjs/config';
 @Module({
@@ -16,7 +16,7 @@ import { ConfigModule } from '@nestjs/config';
     PrismaModule,
     OperationsModule,
     CategoryModule,
-    StatementsModule,
+    // StatementsModule,
     CardModule,
     ConfigModule.forRoot({
       isGlobal: true,
