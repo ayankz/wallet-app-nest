@@ -59,6 +59,8 @@ jobs:
   deploy:
     needs: build_and_push
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{secrets.DATABASE_URL}}
     steps:
       - name: Download image_uri artifact
         uses: actions/download-artifact@v4
@@ -83,16 +85,12 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          envs: |
-            IMAGE_URI=${{ env.IMAGE_URI }}
-            AWS_REGION=${{ env.AWS_REGION }}
-            AWS_ACCOUNT_ID=${{ env.AWS_ACCOUNT_ID }}
-            DATABASE_URL=${{ secrets.DATABASE_URL }}
+          envs: IMAGE_URI,AWS_REGION,AWS_ACCOUNT_ID,DATABASE_URL
           script: |
             set -e
             echo "Using IMAGE_URI=$IMAGE_URI"
-            echo "Using DATABASE_URL=$DATABASE_URL" # Теперь будет выводиться значение
-
+            echo "Using DATABASE_URL=$DATABASE_URL"
+            
             # install docker if missing
             if ! command -v docker >/dev/null 2>&1; then
               sudo dnf -y update
@@ -101,8 +99,8 @@ jobs:
             fi
 
             # login to ECR
-            aws ecr get-login-password --region "${AWS_REGION}" | \
-              sudo docker login --username AWS --password-stdin "${AWS_ACCOUNT_ID}".dkr.ecr."${AWS_REGION}".amazonaws.com
+            aws ecr get-login-password --region $AWS_REGION | \
+              sudo docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
 
             # pull & restart container
             sudo docker pull $IMAGE_URI
