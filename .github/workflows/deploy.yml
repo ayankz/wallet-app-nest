@@ -79,25 +79,6 @@ jobs:
           # Отладочная команда для проверки переменной окружения
           echo "Debug: IMAGE_URI is set to $IMAGE_URI"
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Login to ECR
-        run: |
-          aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
-            docker login --username AWS --password-stdin ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
-      - name: Run Prisma Migrations
-        run: |
-          IMAGE_URI=$(cat image_uri.txt)
-          docker run --rm \
-          -e DATABASE_URL=${{ secrets.DATABASE_URL }} \
-          $IMAGE_URI \
-          npx prisma migrate deploy
-
       - name: Deploy on EC2 via SSH
         uses: appleboy/ssh-action@v0.1.10
         with:
@@ -121,8 +102,16 @@ jobs:
             aws ecr get-login-password --region $AWS_REGION | \
               sudo docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
 
-            # pull & restart container
+            # pull image
             sudo docker pull $IMAGE_URI
+
+            # Run Prisma Migrations on EC2 (this is the new step)
+            sudo docker run --rm \
+              -e DATABASE_URL=$DATABASE_URL \
+              $IMAGE_URI \
+              npx prisma migrate deploy
+
+            # pull & restart container
             sudo docker stop nest-backend || true
             sudo docker rm nest-backend || true
             sudo docker run -d --name nest-backend -p 3000:3333 --restart unless-stopped -e DATABASE_URL=$DATABASE_URL $IMAGE_URI
