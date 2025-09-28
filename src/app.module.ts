@@ -10,6 +10,7 @@ import { CategoryModule } from './category/category.module';
 // import { StatementsModule } from './statements/statements/statements.module';
 import { CardModule } from './card/card.module';
 import { ConfigModule } from '@nestjs/config';
+import { HealthController } from './health-chech/health.controller';
 @Module({
   imports: [
     AuthModule,
@@ -24,7 +25,7 @@ import { ConfigModule } from '@nestjs/config';
         process.env.NODE_ENV === 'production' ? '.env.production' : '.env',
     }),
   ],
-  controllers: [AppController],
+  controllers: [AppController, HealthController],
   providers: [
     AppService,
     {
