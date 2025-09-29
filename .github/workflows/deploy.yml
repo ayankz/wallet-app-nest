@@ -118,7 +118,7 @@ jobs:
             sudo docker stop nest-backend-dev || true
             sudo docker rm nest-backend-dev || true
             sudo docker run -d --name nest-backend-dev -p 4000:3333 --restart unless-stopped -e DATABASE_URL=$DATABASE_URL $IMAGE_URI  
-   deploy-dev-2:
+  deploy-dev-2:
     needs: build_and_push
     if: github.ref == 'refs/heads/dev'
     runs-on: ubuntu-latest
