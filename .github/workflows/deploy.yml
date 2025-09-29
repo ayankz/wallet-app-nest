@@ -110,7 +110,7 @@ jobs:
 
             # Run Prisma Migrations on EC2 (this is the new step)
             sudo docker run --rm \
-              -e DATABASE_URL=$DATABASE_URL_DEV \
+              -e DATABASE_URL=${{ secrets.DATABASE_URL_DEV }} \
               $IMAGE_URI \
               npx prisma migrate deploy
 
