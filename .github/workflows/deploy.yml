@@ -121,6 +121,7 @@ jobs:
 
   deploy:
     needs: build_and_push
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     env:
       DATABASE_URL: ${{secrets.DATABASE_URL}}
