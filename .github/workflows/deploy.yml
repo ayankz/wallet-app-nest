@@ -62,6 +62,8 @@ jobs:
     needs: build_and_push
     if: github.ref == 'refs/heads/dev'
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL_DEV }}
     steps:
       - name: Download image_uri artifact
         uses: actions/download-artifact@v4
@@ -80,17 +82,17 @@ jobs:
           # Отладочная команда для проверки переменной окружения
           echo "Debug: IMAGE_URI is set to $IMAGE_URI"
 
-      - name: Deploy on EC2 via SSH
+      - name: Deploy on EC2_DEV via SSH
         uses: appleboy/ssh-action@v0.1.10
         with:
-          host: ${{ secrets.EC2_HOST }}
+          host: ${{ secrets.EC2_HOST_DEV_1 }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          envs: IMAGE_URI,AWS_REGION,AWS_ACCOUNT_ID,DATABASE_URL
+          envs: IMAGE_URI,AWS_REGION,AWS_ACCOUNT_ID,DATABASE_URL_DEV
           script: |
             set -e
             echo "Using IMAGE_URI=$IMAGE_URI"
-            echo "Using DATABASE_URL=$DATABASE_URL"
+            echo "Using DATABASE_URL=$DATABASE_URL_DEV"
 
             # install docker if missing
             if ! command -v docker >/dev/null 2>&1; then
@@ -108,14 +110,14 @@ jobs:
 
             # Run Prisma Migrations on EC2 (this is the new step)
             sudo docker run --rm \
-              -e DATABASE_URL=$DATABASE_URL \
+              -e DATABASE_URL=$DATABASE_URL_DEV \
               $IMAGE_URI \
               npx prisma migrate deploy
 
             # pull & restart container
-            sudo docker stop nest-backend || true
-            sudo docker rm nest-backend || true
-            sudo docker run -d --name nest-backend -p 3000:3333 --restart unless-stopped -e DATABASE_URL=$DATABASE_URL $IMAGE_URI
+            sudo docker stop nest-backend-dev || true
+            sudo docker rm nest-backend-dev || true
+            sudo docker run -d --name nest-backend-dev -p 4000:3333 --restart unless-stopped -e DATABASE_URL=$DATABASE_URL_DEV $IMAGE_URI
 
   deploy:
     needs: build_and_push
