@@ -25,6 +25,7 @@ model User {
   Card        Card[]
 
   @@map("users")
+  debts Debt[]
 }
 
 model Transaction {
@@ -61,6 +62,27 @@ model Category {
   @@map("categories")
 }
 
+model Debt {
+  id           Int        @id @default(autoincrement())
+  amount       Float
+  description  String?
+  dueDate      DateTime
+  status       DebtStatus @default(PENDING)
+  proofFileUrl String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  userId Int
+  user   User           @relation(fields: [userId], references: [id])
+
+  counterparty String
+
+  // Тип: я дал или я взял
+  direction DebtDirection
+
+  @@map("debts")
+}
+
 model Card {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
@@ -84,4 +106,14 @@ enum TransactionType {
 enum CardType {
   VISA
   MC
+}
+
+enum DebtStatus {
+  PENDING
+  PAID
+  OVERDUE
+}
+enum DebtDirection {
+  LENT   
+  BORROWED 
 }
