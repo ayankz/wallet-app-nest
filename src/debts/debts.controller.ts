@@ -16,7 +16,7 @@ export class DebtsController {
   }
 
   @Get()
-  findAll(@GetCurrentUserId() userId: string) {
+  findAll(@GetCurrentUserId() userId: number) {
     return this.debtsService.findAll(userId);
   }
 
@@ -31,7 +31,7 @@ export class DebtsController {
   // }
 
   @Delete(':id')
-  remove(@Param('id') id: string, @GetCurrentUserId() userId: string) {
+  remove(@Param('id') id: string, @GetCurrentUserId() userId: number) {
     return this.debtsService.remove(id, userId);
   }
 }

@@ -15,7 +15,7 @@ export class DebtsService {
     });
   }
 
-  async findAll(userId: string) {
+  async findAll(userId: number) {
     return this.prisma.debt.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
@@ -26,7 +26,7 @@ export class DebtsService {
   //   return `This action updates a #${id} debt`;
   // }
 
-  async remove(id: string, userId: string) {
+  async remove(id: string, userId: number) {
     return this.prisma.debt.deleteMany({
       where: { id, userId },
     });
