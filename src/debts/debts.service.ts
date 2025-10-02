@@ -1,26 +1,34 @@
 import { Injectable } from '@nestjs/common';
 import { CreateDebtDto } from './dto/create-debt.dto';
-import { UpdateDebtDto } from './dto/update-debt.dto';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class DebtsService {
-  create(createDebtDto: CreateDebtDto) {
-    return 'This action adds a new debt';
+  constructor(private readonly prisma: PrismaService) {}
+
+  async create(userId: number, createDebtDto: CreateDebtDto) {
+    return this.prisma.debt.create({
+      data: {
+        ...createDebtDto,
+        userId,
+      },
+    });
   }
 
-  findAll() {
-    return `This action returns all debts`;
+  async findAll(userId: string) {
+    return this.prisma.debt.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} debt`;
-  }
+  // update(id: number, updateDebtDto: UpdateDebtDto) {
+  //   return `This action updates a #${id} debt`;
+  // }
 
-  update(id: number, updateDebtDto: UpdateDebtDto) {
-    return `This action updates a #${id} debt`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} debt`;
+  async remove(id: string, userId: string) {
+    return this.prisma.debt.deleteMany({
+      where: { id, userId },
+    });
   }
 }
