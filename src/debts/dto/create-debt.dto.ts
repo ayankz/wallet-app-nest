@@ -1,5 +1,6 @@
-import { DebtStatus } from '@prisma/client';
+import { DebtDirection, DebtStatus } from '@prisma/client';
 import {
+  IsDateString,
   IsEnum,
   IsNotEmpty,
   IsNumber,
@@ -13,7 +14,7 @@ export class CreateDebtDto {
 
   @IsString()
   @IsNotEmpty()
-  counterparty: string; // у кого взял / кому дал
+  counterparty: string;
 
   @IsOptional()
   @IsString()
@@ -21,9 +22,17 @@ export class CreateDebtDto {
 
   @IsOptional()
   @IsEnum(DebtStatus)
-  status?: DebtStatus; // по умолчанию PENDING
+  status?: DebtStatus;
 
   @IsOptional()
   @IsString()
-  attachment?: string; // путь к файлу/URL
+  proofFileUrl?: string;
+
+  @IsNotEmpty()
+  @IsDateString()
+  dueDate: string;
+
+  @IsNotEmpty()
+  @IsEnum(DebtDirection)
+  direction: DebtDirection;
 }

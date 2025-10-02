@@ -44,7 +44,7 @@ export class CardService {
     const card = await this.prisma.card.findUnique({
       where: { id: cardId },
     });
-
+    console.log(card)
     if (!card || card.userId !== userId) {
       throw new Error('Карта не найдена или доступ запрещен');
     }

@@ -6,11 +6,17 @@ import { PrismaService } from 'src/prisma/prisma.service';
 export class DebtsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(userId: number, createDebtDto: CreateDebtDto) {
+  async create(userId: number, dto: CreateDebtDto) {
     return this.prisma.debt.create({
       data: {
-        ...createDebtDto,
         userId,
+        amount: dto.amount,
+        counterparty: dto.counterparty,
+        description: dto.description,
+        status: dto.status,
+        proofFileUrl: dto.proofFileUrl,
+        dueDate: dto.dueDate, 
+        direction: dto.direction, 
       },
     });
   }
@@ -26,7 +32,7 @@ export class DebtsService {
   //   return `This action updates a #${id} debt`;
   // }
 
-  async remove(id: string, userId: number) {
+  async remove(id: number, userId: number) {
     return this.prisma.debt.deleteMany({
       where: { id, userId },
     });

@@ -30,8 +30,8 @@ export class DebtsController {
   //   return this.debtsService.update(+id, updateDebtDto);
   // }
 
-  @Delete(':id')
-  remove(@Param('id') id: string, @GetCurrentUserId() userId: number) {
-    return this.debtsService.remove(id, userId);
+  @Delete(':debtId')
+  remove(@Param('debtId') debtId: string, @GetCurrentUserId() userId: number) {
+    return this.debtsService.remove(Number(debtId), userId);
   }
 }
