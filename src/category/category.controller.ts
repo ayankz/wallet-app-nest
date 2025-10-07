@@ -22,7 +22,6 @@ export class CategoryController {
 
   @Get()
   findAll(@Query('type') type?: TransactionType) {
-    console.log('Fetching categories with type:', type);
     return this.categoryService.findAll(type);
   }
 

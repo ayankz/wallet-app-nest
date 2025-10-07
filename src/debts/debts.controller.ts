@@ -1,7 +1,18 @@
-import { Controller, Get, Post, Body, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Delete,
+  Query,
+  Patch,
+  ParseIntPipe,
+} from '@nestjs/common';
 import { DebtsService } from './debts.service';
 import { CreateDebtDto } from './dto/create-debt.dto';
 import { GetCurrentUserId } from 'src/common/decorators';
+import { UpdateDebtDto } from './dto/update-debt.dto';
 
 @Controller('debts')
 export class DebtsController {
@@ -16,22 +27,32 @@ export class DebtsController {
   }
 
   @Get()
-  findAll(@GetCurrentUserId() userId: number) {
-    return this.debtsService.findAll(userId);
+  findAll(
+    @GetCurrentUserId() userId: number,
+    @Query('page') page: string,
+    @Query('limit') limit: string,
+  ) {
+    return this.debtsService.findAll(
+      userId,
+      Number(page) || 1,
+      Number(limit) || 10,
+    );
   }
 
-  // @Get(':id')
-  // findOne(@Param('id') id: string) {
-  //   return this.debtsService.findOne(+id);
-  // }
-
-  // @Patch(':id')
-  // update(@Param('id') id: string, @Body() updateDebtDto: UpdateDebtDto) {
-  //   return this.debtsService.update(+id, updateDebtDto);
-  // }
+  @Patch(':debtId')
+  update(
+    @Param('debtId', ParseIntPipe) debtId: number,
+    @Body() updateDebtDto: UpdateDebtDto,
+    @GetCurrentUserId() userId: number,
+  ) {
+    return this.debtsService.update(debtId, updateDebtDto, userId);
+  }
 
   @Delete(':debtId')
-  remove(@Param('debtId') debtId: string, @GetCurrentUserId() userId: number) {
-    return this.debtsService.remove(Number(debtId), userId);
+  remove(
+    @Param('debtId', ParseIntPipe) debtId: number,
+    @GetCurrentUserId() userId: number,
+  ) {
+    return this.debtsService.remove(debtId, userId);
   }
 }
