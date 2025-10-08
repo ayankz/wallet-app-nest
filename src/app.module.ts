@@ -12,6 +12,7 @@ import { ConfigModule } from '@nestjs/config';
 import { HealthController } from './health-chech/health.controller';
 import { DebtsModule } from './debts/debts.module';
 import { StatementsModule } from './statements/statements/statements.module';
+import { RedisModule } from './redis/redis.module';
 @Module({
   imports: [
     AuthModule,
@@ -20,12 +21,14 @@ import { StatementsModule } from './statements/statements/statements.module';
     CategoryModule,
     StatementsModule,
     CardModule,
+    RedisModule,
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath:
         process.env.NODE_ENV === 'production' ? '.env.production' : '.env',
     }),
     DebtsModule,
+    RedisModule,
   ],
   controllers: [AppController, HealthController],
   providers: [
