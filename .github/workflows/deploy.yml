@@ -64,8 +64,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DATABASE_URL: ${{ secrets.DATABASE_URL_DEV }}
-      REDIS_HOST: ${{ secrets.REDIS_HOST_DEV }}
-      REDIS_PORT: ${{ secrets.REDIS_PORT_DEV }}
+      REDIS_HOST: ${{ secrets.REDIS_HOST }}
+      REDIS_PORT: ${{ secrets.REDIS_PORT }}
       AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
     steps:
       - name: Download image_uri artifact
@@ -127,8 +127,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DATABASE_URL: ${{ secrets.DATABASE_URL_DEV }}
-      REDIS_HOST: ${{ secrets.REDIS_HOST_DEV }}
-      REDIS_PORT: ${{ secrets.REDIS_PORT_DEV }}
+      REDIS_HOST: ${{ secrets.REDIS_HOST }}
+      REDIS_PORT: ${{ secrets.REDIS_PORT }}
       AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
     steps:
       - name: Download image_uri artifact
@@ -154,7 +154,7 @@ jobs:
           host: ${{ secrets.EC2_HOST_DEV_2 }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          envs: IMAGE_URI,AWS_REGION,AWS_ACCOUNT_ID,DATABASE_URL
+          envs: IMAGE_URI,AWS_REGION,AWS_ACCOUNT_ID,DATABASE_URL,REDIS_HOST,REDIS_PORT,AWS_S3_BUCKET
           script: |
             set -e
             echo "Using IMAGE_URI=$IMAGE_URI"
@@ -191,8 +191,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DATABASE_URL: ${{secrets.DATABASE_URL}}
-      REDIS_HOST: ${{ secrets.REDIS_HOST_DEV }}
-      REDIS_PORT: ${{ secrets.REDIS_PORT_DEV }}
+      REDIS_HOST: ${{ secrets.REDIS_HOST }}
+      REDIS_PORT: ${{ secrets.REDIS_PORT }}
       AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
     steps:
       - name: Download image_uri artifact
@@ -218,7 +218,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          envs: IMAGE_URI,AWS_REGION,AWS_ACCOUNT_ID,DATABASE_URL
+          envs: IMAGE_URI,AWS_REGION,AWS_ACCOUNT_ID,DATABASE_URL,REDIS_HOST,REDIS_PORT,AWS_S3_BUCKET
           script: |
             set -e
             echo "Using IMAGE_URI=$IMAGE_URI"
