@@ -13,6 +13,7 @@ import { HealthController } from './health-chech/health.controller';
 import { DebtsModule } from './debts/debts.module';
 import { StatementsModule } from './statements/statements/statements.module';
 import { RedisModule } from './redis/redis.module';
+import { WorkerModule } from './worker/worker.module';
 @Module({
   imports: [
     AuthModule,
@@ -29,6 +30,7 @@ import { RedisModule } from './redis/redis.module';
     }),
     DebtsModule,
     RedisModule,
+    WorkerModule,
   ],
   controllers: [AppController, HealthController],
   providers: [

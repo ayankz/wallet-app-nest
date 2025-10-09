@@ -13,11 +13,17 @@ export class StatementsProcessor extends WorkerHost implements OnModuleInit {
 
   async process(job: Job<any>) {
     this.logger.log(`📄 Processing job ${job.name} with ID ${job.id}`);
+    this.logger.debug(`Payload: ${JSON.stringify(job.data)}`);
     return { status: 'ok' };
   }
 
   @OnWorkerEvent('failed')
   onFailed(job: Job<any>, err: Error) {
     this.logger.error(`❌ Job ${job.id} failed: ${err.message}`);
+  }
+
+  @OnWorkerEvent('completed')
+  onCompleted(job: Job<any>) {
+    this.logger.log(`✅ Job ${job.id} completed successfully`);
   }
 }
