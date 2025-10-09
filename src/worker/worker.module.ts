@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { BullModule } from '@nestjs/bullmq';
-import { StatementsProcessor } from '../statements/statements/statements.processor';
+import { StatementsProcessor } from './statements.processor';
 
 @Module({
   imports: [
