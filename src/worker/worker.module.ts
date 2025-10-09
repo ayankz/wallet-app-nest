@@ -5,8 +5,6 @@ import { StatementsProcessor } from './statements.processor';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
-
     BullModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => ({
