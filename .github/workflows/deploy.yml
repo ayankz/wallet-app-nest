@@ -1,292 +1,292 @@
-name: 'CI/CD: Build → ECR → Deploy to EC2'
+# name: 'CI/CD: Build → ECR → Deploy to EC2'
 
-on:
-  push:
-    branches:
-      - main
-      - dev
+# on:
+#   push:
+#     branches:
+#       - main
+#       - dev
 
-env:
-  AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-  AWS_REGION: us-east-1
-  ECR_REPOSITORY: expense-tracker-nest
-  IMAGE_TAG: ${{ github.sha }}
+# env:
+#   AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+#   AWS_REGION: us-east-1
+#   ECR_REPOSITORY: expense-tracker-nest
+#   IMAGE_TAG: ${{ github.sha }}
 
-jobs:
-  build_and_push:
-    runs-on: ubuntu-latest
-    outputs:
-      image_uri: ${{ steps.set_image.outputs.image_uri }}
-      image_uri_worker: ${{ steps.set_worker.outputs.image_uri_worker }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+# jobs:
+#   build_and_push:
+#     runs-on: ubuntu-latest
+#     outputs:
+#       image_uri: ${{ steps.set_image.outputs.image_uri }}
+#       image_uri_worker: ${{ steps.set_worker.outputs.image_uri_worker }}
+#     steps:
+#       - name: Checkout
+#         uses: actions/checkout@v4
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
+#       - name: Configure AWS credentials
+#         uses: aws-actions/configure-aws-credentials@v4
+#         with:
+#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Create ECR repo if not exists
-        run: |
-          aws ecr describe-repositories --repository-names ${{ env.ECR_REPOSITORY }} || \
-            aws ecr create-repository --repository-name ${{ env.ECR_REPOSITORY }}
+#       - name: Create ECR repo if not exists
+#         run: |
+#           aws ecr describe-repositories --repository-names ${{ env.ECR_REPOSITORY }} || \
+#             aws ecr create-repository --repository-name ${{ env.ECR_REPOSITORY }}
 
-      - name: Login to ECR
-        run: |
-          aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
-            docker login --username AWS --password-stdin ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
- # ---------- BACKEND ----------
-      # - name: Build & tag image
-      #   run: |
-      #     IMAGE_URI=${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}
-      #     docker build -t $IMAGE_URI:${{ env.IMAGE_TAG }} -t $IMAGE_URI:latest .
+#       - name: Login to ECR
+#         run: |
+#           aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
+#             docker login --username AWS --password-stdin ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
+#  # ---------- BACKEND ----------
+#       # - name: Build & tag image
+#       #   run: |
+#       #     IMAGE_URI=${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}
+#       #     docker build -t $IMAGE_URI:${{ env.IMAGE_TAG }} -t $IMAGE_URI:latest .
 
-      - name: Build & push backend image
-        id: set_backend
-        run: |
-          BACKEND_IMAGE=${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:backend-${{ github.sha }}
-          docker build -t $BACKEND_IMAGE -t ${{ env.ECR_REPOSITORY }}:backend-latest .
-          docker push $BACKEND_IMAGE
-          echo "image_uri_backend=$BACKEND_IMAGE" >> $GITHUB_OUTPUT
-      # ---------- WORKER ----------
-      - name: Build & push worker image
-        id: set_worker
-        run: |
-          WORKER_IMAGE=${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:worker-${{ github.sha }}
-          docker build -f Dockerfile.worker -t $WORKER_IMAGE -t ${{ env.ECR_REPOSITORY }}:worker-latest .
-          docker push $WORKER_IMAGE
-          echo "image_uri_worker=$WORKER_IMAGE" >> $GITHUB_OUTPUT
+#       - name: Build & push backend image
+#         id: set_backend
+#         run: |
+#           BACKEND_IMAGE=${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:backend-${{ github.sha }}
+#           docker build -t $BACKEND_IMAGE -t ${{ env.ECR_REPOSITORY }}:backend-latest .
+#           docker push $BACKEND_IMAGE
+#           echo "image_uri_backend=$BACKEND_IMAGE" >> $GITHUB_OUTPUT
+#       # ---------- WORKER ----------
+#       - name: Build & push worker image
+#         id: set_worker
+#         run: |
+#           WORKER_IMAGE=${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:worker-${{ github.sha }}
+#           docker build -f Dockerfile.worker -t $WORKER_IMAGE -t ${{ env.ECR_REPOSITORY }}:worker-latest .
+#           docker push $WORKER_IMAGE
+#           echo "image_uri_worker=$WORKER_IMAGE" >> $GITHUB_OUTPUT
 
-      - name: Save image_uri to file
-        run: |
-          echo "${{ steps.set_backend.outputs.image_uri_backend }}" > backend_image_uri.txt
-          echo "${{ steps.set_worker.outputs.image_uri_worker }}" > worker_image_uri.txt
+#       - name: Save image_uri to file
+#         run: |
+#           echo "${{ steps.set_backend.outputs.image_uri_backend }}" > backend_image_uri.txt
+#           echo "${{ steps.set_worker.outputs.image_uri_worker }}" > worker_image_uri.txt
       
-      - name: Upload image_uri artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: images
-          path: |
-            backend_image_uri.txt
-            worker_image_uri.txt
+#       - name: Upload image_uri artifact
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: images
+#           path: |
+#             backend_image_uri.txt
+#             worker_image_uri.txt
 
-  deploy-dev-1:
-    needs: build_and_push
-    if: github.ref == 'refs/heads/dev'
-    runs-on: ubuntu-latest
-    env:
-      DATABASE_URL: ${{ secrets.DATABASE_URL_DEV }}
-      REDIS_HOST: ${{ secrets.REDIS_HOST }}
-      REDIS_PORT: ${{ secrets.REDIS_PORT }}
-      AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
-    steps:
-      - name: Download image_uri artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: images
-      # - name: Show contents of image_uri.txt
-      #   run: cat image_uri.txt
-      - name: Read image URIs
-        id: read_image
-        run: |
-          BACKEND_IMAGE_URI=$(cat backend_image_uri.txt)
-          WORKER_IMAGE_URI=$(cat worker_image_uri.txt)
+#   deploy-dev-1:
+#     needs: build_and_push
+#     if: github.ref == 'refs/heads/dev'
+#     runs-on: ubuntu-latest
+#     env:
+#       DATABASE_URL: ${{ secrets.DATABASE_URL_DEV }}
+#       REDIS_HOST: ${{ secrets.REDIS_HOST }}
+#       REDIS_PORT: ${{ secrets.REDIS_PORT }}
+#       AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+#     steps:
+#       - name: Download image_uri artifact
+#         uses: actions/download-artifact@v4
+#         with:
+#           name: images
+#       # - name: Show contents of image_uri.txt
+#       #   run: cat image_uri.txt
+#       - name: Read image URIs
+#         id: read_image
+#         run: |
+#           BACKEND_IMAGE_URI=$(cat backend_image_uri.txt)
+#           WORKER_IMAGE_URI=$(cat worker_image_uri.txt)
 
-          # Отладочная команда для проверки переменной окружения
-          echo "BACKEND_IMAGE_URI=$BACKEND_IMAGE_URI" >> $GITHUB_ENV
-          echo "WORKER_IMAGE_URI=$WORKER_IMAGE_URI" >> $GITHUB_ENV
+#           # Отладочная команда для проверки переменной окружения
+#           echo "BACKEND_IMAGE_URI=$BACKEND_IMAGE_URI" >> $GITHUB_ENV
+#           echo "WORKER_IMAGE_URI=$WORKER_IMAGE_URI" >> $GITHUB_ENV
 
-      - name: Deploy on EC2_DEV_1 via SSH
-        uses: appleboy/ssh-action@v0.1.10
-        with:
-          host: ${{ secrets.EC2_HOST_DEV_1 }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          envs: BACKEND_IMAGE_URI,WORKER_IMAGE_URI,AWS_REGION,AWS_ACCOUNT_ID,DATABASE_URL,REDIS_HOST,REDIS_PORT,AWS_S3_BUCKET
-          script: |
-            set -e
-            echo "Deploying backend: $BACKEND_IMAGE_URI"
-            echo "Deploying worker: $WORKER_IMAGE_URI"
-            echo "Using DATABASE_URL=$DATABASE_URL_DEV"
+#       - name: Deploy on EC2_DEV_1 via SSH
+#         uses: appleboy/ssh-action@v0.1.10
+#         with:
+#           host: ${{ secrets.EC2_HOST_DEV_1 }}
+#           username: ${{ secrets.EC2_USER }}
+#           key: ${{ secrets.EC2_SSH_KEY }}
+#           envs: BACKEND_IMAGE_URI,WORKER_IMAGE_URI,AWS_REGION,AWS_ACCOUNT_ID,DATABASE_URL,REDIS_HOST,REDIS_PORT,AWS_S3_BUCKET
+#           script: |
+#             set -e
+#             echo "Deploying backend: $BACKEND_IMAGE_URI"
+#             echo "Deploying worker: $WORKER_IMAGE_URI"
+#             echo "Using DATABASE_URL=$DATABASE_URL_DEV"
 
-            # install docker if missing
-            if ! command -v docker >/dev/null 2>&1; then
-              sudo dnf -y update
-              sudo dnf -y install docker
-              sudo systemctl enable --now docker
-            fi
+#             # install docker if missing
+#             if ! command -v docker >/dev/null 2>&1; then
+#               sudo dnf -y update
+#               sudo dnf -y install docker
+#               sudo systemctl enable --now docker
+#             fi
 
-            # login to ECR
-            aws ecr get-login-password --region $AWS_REGION | \
-              sudo docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+#             # login to ECR
+#             aws ecr get-login-password --region $AWS_REGION | \
+#               sudo docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
 
-            # pull image
-            sudo docker pull $BACKEND_IMAGE_URI
-            sudo docker pull $WORKER_IMAGE_URI
+#             # pull image
+#             sudo docker pull $BACKEND_IMAGE_URI
+#             sudo docker pull $WORKER_IMAGE_URI
 
-            # Run Prisma Migrations on EC2 (this is the new step)
-            sudo docker run --rm \
-              -e DATABASE_URL=$DATABASE_URL \
-              $BACKEND_IMAGE_URI \
-              npx prisma migrate deploy
+#             # Run Prisma Migrations on EC2 (this is the new step)
+#             sudo docker run --rm \
+#               -e DATABASE_URL=$DATABASE_URL \
+#               $BACKEND_IMAGE_URI \
+#               npx prisma migrate deploy
 
-            # restart backend
-            sudo docker stop nest-backend-dev || true
-            sudo docker rm nest-backend-dev || true
-            sudo docker run -d --name nest-backend-dev -p 4000:3333 --restart unless-stopped -e DATABASE_URL=$DATABASE_URL -e AWS_REGION=${{env.AWS_REGION}} -e AWS_S3_BUCKET=$AWS_S3_BUCKET -e REDIS_HOST=$REDIS_HOST -e REDIS_PORT=$REDIS_PORT $BACKEND_IMAGE_URI
+#             # restart backend
+#             sudo docker stop nest-backend-dev || true
+#             sudo docker rm nest-backend-dev || true
+#             sudo docker run -d --name nest-backend-dev -p 4000:3333 --restart unless-stopped -e DATABASE_URL=$DATABASE_URL -e AWS_REGION=${{env.AWS_REGION}} -e AWS_S3_BUCKET=$AWS_S3_BUCKET -e REDIS_HOST=$REDIS_HOST -e REDIS_PORT=$REDIS_PORT $BACKEND_IMAGE_URI
 
-            # restart worker
-            sudo docker stop nest-worker-dev || true
-            sudo docker rm nest-worker-dev || true
-            sudo docker run -d --name nest-worker-dev --restart unless-stopped \
-              -e DATABASE_URL=$DATABASE_URL \
-              -e REDIS_HOST=$REDIS_HOST \
-              -e REDIS_PORT=$REDIS_PORT \
-              -e AWS_REGION=$AWS_REGION \
-              -e AWS_S3_BUCKET=$AWS_S3_BUCKET \
-              $WORKER_IMAGE_URI
+#             # restart worker
+#             sudo docker stop nest-worker-dev || true
+#             sudo docker rm nest-worker-dev || true
+#             sudo docker run -d --name nest-worker-dev --restart unless-stopped \
+#               -e DATABASE_URL=$DATABASE_URL \
+#               -e REDIS_HOST=$REDIS_HOST \
+#               -e REDIS_PORT=$REDIS_PORT \
+#               -e AWS_REGION=$AWS_REGION \
+#               -e AWS_S3_BUCKET=$AWS_S3_BUCKET \
+#               $WORKER_IMAGE_URI
 
-  deploy-dev-2:
-    needs: build_and_push
-    if: github.ref == 'refs/heads/dev'
-    runs-on: ubuntu-latest
-    env:
-      DATABASE_URL: ${{ secrets.DATABASE_URL_DEV }}
-      REDIS_HOST: ${{ secrets.REDIS_HOST }}
-      REDIS_PORT: ${{ secrets.REDIS_PORT }}
-      AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
-    steps:
-      - name: Download image_uri artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: images
+#   deploy-dev-2:
+#     needs: build_and_push
+#     if: github.ref == 'refs/heads/dev'
+#     runs-on: ubuntu-latest
+#     env:
+#       DATABASE_URL: ${{ secrets.DATABASE_URL_DEV }}
+#       REDIS_HOST: ${{ secrets.REDIS_HOST }}
+#       REDIS_PORT: ${{ secrets.REDIS_PORT }}
+#       AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+#     steps:
+#       - name: Download image_uri artifact
+#         uses: actions/download-artifact@v4
+#         with:
+#           name: images
 
-      # - name: Show contents of image_uri.txt
-      #   run: cat image_uri.txt
+#       # - name: Show contents of image_uri.txt
+#       #   run: cat image_uri.txt
 
-      - name: Read image URIs
-        id: read_image
-        run: |
-          BACKEND_IMAGE_URI=$(cat backend_image_uri.txt)
-          WORKER_IMAGE_URI=$(cat worker_image_uri.txt)
+#       - name: Read image URIs
+#         id: read_image
+#         run: |
+#           BACKEND_IMAGE_URI=$(cat backend_image_uri.txt)
+#           WORKER_IMAGE_URI=$(cat worker_image_uri.txt)
 
-          # Отладочная команда для проверки переменной окружения
-          echo "BACKEND_IMAGE_URI=$BACKEND_IMAGE_URI" >> $GITHUB_ENV
-          echo "WORKER_IMAGE_URI=$WORKER_IMAGE_URI" >> $GITHUB_ENV
+#           # Отладочная команда для проверки переменной окружения
+#           echo "BACKEND_IMAGE_URI=$BACKEND_IMAGE_URI" >> $GITHUB_ENV
+#           echo "WORKER_IMAGE_URI=$WORKER_IMAGE_URI" >> $GITHUB_ENV
 
-      - name: Deploy on EC2_DEV_2 via SSH
-        uses: appleboy/ssh-action@v0.1.10
-        with:
-          host: ${{ secrets.EC2_HOST_DEV_2 }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          envs: BACKEND_IMAGE_URI,WORKER_IMAGE_URI,IMAGE_URI,AWS_REGION,AWS_ACCOUNT_ID,DATABASE_URL,REDIS_HOST,REDIS_PORT,AWS_S3_BUCKET
-          script: |
-            set -e
-            echo "Deploying backend: $BACKEND_IMAGE_URI"
-            echo "Deploying worker: $WORKER_IMAGE_URI"
-            echo "Using DATABASE_URL=$DATABASE_URL_DEV"
+#       - name: Deploy on EC2_DEV_2 via SSH
+#         uses: appleboy/ssh-action@v0.1.10
+#         with:
+#           host: ${{ secrets.EC2_HOST_DEV_2 }}
+#           username: ${{ secrets.EC2_USER }}
+#           key: ${{ secrets.EC2_SSH_KEY }}
+#           envs: BACKEND_IMAGE_URI,WORKER_IMAGE_URI,IMAGE_URI,AWS_REGION,AWS_ACCOUNT_ID,DATABASE_URL,REDIS_HOST,REDIS_PORT,AWS_S3_BUCKET
+#           script: |
+#             set -e
+#             echo "Deploying backend: $BACKEND_IMAGE_URI"
+#             echo "Deploying worker: $WORKER_IMAGE_URI"
+#             echo "Using DATABASE_URL=$DATABASE_URL_DEV"
 
-            # install docker if missing
-            if ! command -v docker >/dev/null 2>&1; then
-              sudo dnf -y update
-              sudo dnf -y install docker
-              sudo systemctl enable --now docker
-            fi
+#             # install docker if missing
+#             if ! command -v docker >/dev/null 2>&1; then
+#               sudo dnf -y update
+#               sudo dnf -y install docker
+#               sudo systemctl enable --now docker
+#             fi
 
-            # login to ECR
-            aws ecr get-login-password --region $AWS_REGION | \
-              sudo docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+#             # login to ECR
+#             aws ecr get-login-password --region $AWS_REGION | \
+#               sudo docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
 
-            # pull image
-            sudo docker pull $BACKEND_IMAGE_URI
-            sudo docker pull $WORKER_IMAGE_URI
+#             # pull image
+#             sudo docker pull $BACKEND_IMAGE_URI
+#             sudo docker pull $WORKER_IMAGE_URI
 
-            # Run Prisma Migrations on EC2 (this is the new step)
-            sudo docker run --rm \
-              -e DATABASE_URL=$DATABASE_URL \
-              $BACKEND_IMAGE_URI \
-              npx prisma migrate deploy
+#             # Run Prisma Migrations on EC2 (this is the new step)
+#             sudo docker run --rm \
+#               -e DATABASE_URL=$DATABASE_URL \
+#               $BACKEND_IMAGE_URI \
+#               npx prisma migrate deploy
 
-            # restart backend
-            sudo docker stop nest-backend-dev || true
-            sudo docker rm nest-backend-dev || true
-            sudo docker run -d --name nest-backend-dev -p 4000:3333 --restart unless-stopped -e DATABASE_URL=$DATABASE_URL -e AWS_REGION=${{env.AWS_REGION}} -e AWS_S3_BUCKET=$AWS_S3_BUCKET -e REDIS_HOST=$REDIS_HOST -e REDIS_PORT=$REDIS_PORT $BACKEND_IMAGE_URI
+#             # restart backend
+#             sudo docker stop nest-backend-dev || true
+#             sudo docker rm nest-backend-dev || true
+#             sudo docker run -d --name nest-backend-dev -p 4000:3333 --restart unless-stopped -e DATABASE_URL=$DATABASE_URL -e AWS_REGION=${{env.AWS_REGION}} -e AWS_S3_BUCKET=$AWS_S3_BUCKET -e REDIS_HOST=$REDIS_HOST -e REDIS_PORT=$REDIS_PORT $BACKEND_IMAGE_URI
 
-            # restart worker
-            sudo docker stop nest-worker-dev || true
-            sudo docker rm nest-worker-dev || true
-            sudo docker run -d --name nest-worker-dev --restart unless-stopped \
-              -e DATABASE_URL=$DATABASE_URL \
-              -e REDIS_HOST=$REDIS_HOST \
-              -e REDIS_PORT=$REDIS_PORT \
-              -e AWS_REGION=$AWS_REGION \
-              -e AWS_S3_BUCKET=$AWS_S3_BUCKET \
-              $WORKER_IMAGE_URI
+#             # restart worker
+#             sudo docker stop nest-worker-dev || true
+#             sudo docker rm nest-worker-dev || true
+#             sudo docker run -d --name nest-worker-dev --restart unless-stopped \
+#               -e DATABASE_URL=$DATABASE_URL \
+#               -e REDIS_HOST=$REDIS_HOST \
+#               -e REDIS_PORT=$REDIS_PORT \
+#               -e AWS_REGION=$AWS_REGION \
+#               -e AWS_S3_BUCKET=$AWS_S3_BUCKET \
+#               $WORKER_IMAGE_URI
 
-  deploy:
-    needs: build_and_push
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    env:
-      DATABASE_URL: ${{secrets.DATABASE_URL}}
-      REDIS_HOST: ${{ secrets.REDIS_HOST }}
-      REDIS_PORT: ${{ secrets.REDIS_PORT }}
-      AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
-    steps:
-      - name: Download image_uri artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: image_uri
+#   deploy:
+#     needs: build_and_push
+#     if: github.ref == 'refs/heads/main'
+#     runs-on: ubuntu-latest
+#     env:
+#       DATABASE_URL: ${{secrets.DATABASE_URL}}
+#       REDIS_HOST: ${{ secrets.REDIS_HOST }}
+#       REDIS_PORT: ${{ secrets.REDIS_PORT }}
+#       AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+#     steps:
+#       - name: Download image_uri artifact
+#         uses: actions/download-artifact@v4
+#         with:
+#           name: image_uri
 
-      - name: Show contents of image_uri.txt
-        run: cat image_uri.txt
+#       - name: Show contents of image_uri.txt
+#         run: cat image_uri.txt
 
-      - name: Read image_uri
-        id: read_image
-        run: |
-          IMAGE_URI=$(cat image_uri.txt)
-          echo "IMAGE_URI=$IMAGE_URI" >> $GITHUB_ENV
+#       - name: Read image_uri
+#         id: read_image
+#         run: |
+#           IMAGE_URI=$(cat image_uri.txt)
+#           echo "IMAGE_URI=$IMAGE_URI" >> $GITHUB_ENV
 
-          # Отладочная команда для проверки переменной окружения
-          echo "Debug: IMAGE_URI is set to $IMAGE_URI"
+#           # Отладочная команда для проверки переменной окружения
+#           echo "Debug: IMAGE_URI is set to $IMAGE_URI"
 
-      - name: Deploy on EC2 via SSH
-        uses: appleboy/ssh-action@v0.1.10
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          envs: IMAGE_URI,AWS_REGION,AWS_ACCOUNT_ID,DATABASE_URL,REDIS_HOST,REDIS_PORT,AWS_S3_BUCKET
-          script: |
-            set -e
-            echo "Using IMAGE_URI=$IMAGE_URI"
-            echo "Using DATABASE_URL=$DATABASE_URL"
+#       - name: Deploy on EC2 via SSH
+#         uses: appleboy/ssh-action@v0.1.10
+#         with:
+#           host: ${{ secrets.EC2_HOST }}
+#           username: ${{ secrets.EC2_USER }}
+#           key: ${{ secrets.EC2_SSH_KEY }}
+#           envs: IMAGE_URI,AWS_REGION,AWS_ACCOUNT_ID,DATABASE_URL,REDIS_HOST,REDIS_PORT,AWS_S3_BUCKET
+#           script: |
+#             set -e
+#             echo "Using IMAGE_URI=$IMAGE_URI"
+#             echo "Using DATABASE_URL=$DATABASE_URL"
 
-            # install docker if missing
-            if ! command -v docker >/dev/null 2>&1; then
-              sudo dnf -y update
-              sudo dnf -y install docker
-              sudo systemctl enable --now docker
-            fi
+#             # install docker if missing
+#             if ! command -v docker >/dev/null 2>&1; then
+#               sudo dnf -y update
+#               sudo dnf -y install docker
+#               sudo systemctl enable --now docker
+#             fi
 
-            # login to ECR
-            aws ecr get-login-password --region $AWS_REGION | \
-              sudo docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+#             # login to ECR
+#             aws ecr get-login-password --region $AWS_REGION | \
+#               sudo docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
 
-            # pull image
-            sudo docker pull $IMAGE_URI
+#             # pull image
+#             sudo docker pull $IMAGE_URI
 
-            # Run Prisma Migrations on EC2 (this is the new step)
-            sudo docker run --rm \
-              -e DATABASE_URL=$DATABASE_URL \
-              $IMAGE_URI \
-              npx prisma migrate deploy
+#             # Run Prisma Migrations on EC2 (this is the new step)
+#             sudo docker run --rm \
+#               -e DATABASE_URL=$DATABASE_URL \
+#               $IMAGE_URI \
+#               npx prisma migrate deploy
 
-            # pull & restart container
-            sudo docker stop nest-backend || true
-            sudo docker rm nest-backend || true
-            sudo docker run -d --name nest-backend -p 3000:3333 --restart unless-stopped -e DATABASE_URL=$DATABASE_URL -e AWS_REGION=${{env.AWS_REGION}} -e AWS_S3_BUCKET=$AWS_S3_BUCKET -e REDIS_HOST=$REDIS_HOST -e REDIS_PORT=$REDIS_PORT $IMAGE_URI
+#             # pull & restart container
+#             sudo docker stop nest-backend || true
+#             sudo docker rm nest-backend || true
+#             sudo docker run -d --name nest-backend -p 3000:3333 --restart unless-stopped -e DATABASE_URL=$DATABASE_URL -e AWS_REGION=${{env.AWS_REGION}} -e AWS_S3_BUCKET=$AWS_S3_BUCKET -e REDIS_HOST=$REDIS_HOST -e REDIS_PORT=$REDIS_PORT $IMAGE_URI
