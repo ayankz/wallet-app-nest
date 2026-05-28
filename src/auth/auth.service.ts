@@ -4,6 +4,7 @@ import { AuthDto } from './dto';
 import * as bcrypt from 'bcrypt';
 import { Tokens } from './types';
 import { JwtService } from '@nestjs/jwt';
+import { randomUUID } from 'node:crypto';
 @Injectable()
 export class AuthService {
   constructor(
@@ -71,11 +72,36 @@ export class AuthService {
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
-    if (!user) throw new ForbiddenException('Пользователь не найден');
+    if (!user) throw new ForbiddenException('User not found');
 
     const passwordMatches = await bcrypt.compare(dto.password, user.hash);
     if (!passwordMatches)
-      throw new ForbiddenException('Введенный пароль не верный');
+      throw new ForbiddenException('Password is incorrect');
+
+    const tokens = await this.getTokens(user.id, user.email);
+    await this.updateRtHash(user.id, tokens.refresh_token);
+
+    return tokens;
+  }
+
+  async signInGoogle(email?: string): Promise<Tokens> {
+    if (!email) {
+      throw new ForbiddenException('Google account email is missing');
+    }
+
+    let user = await this.prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      const hash = await this.hashData(randomUUID());
+      user = await this.prisma.user.create({
+        data: {
+          email,
+          hash,
+        },
+      });
+    }
 
     const tokens = await this.getTokens(user.id, user.email);
     await this.updateRtHash(user.id, tokens.refresh_token);
