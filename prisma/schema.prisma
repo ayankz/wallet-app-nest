@@ -67,7 +67,6 @@ model Card {
   updatedAt DateTime @updatedAt
   digits    String   @unique
   balance   Decimal  @default(0.0)
-  type      CardType @default(VISA)
 
   userId       Int
   user         User          @relation(fields: [userId], references: [id])
@@ -79,9 +78,4 @@ model Card {
 enum TransactionType {
   INCOME
   EXPENSE
-}
-
-enum CardType {
-  VISA
-  MC
 }

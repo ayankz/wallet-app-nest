@@ -23,7 +23,6 @@ export class CardService {
         digits: dto.digits,
         userId,
         balance: new Prisma.Decimal(dto.balance),
-        type: dto.type,
       },
     });
   }
