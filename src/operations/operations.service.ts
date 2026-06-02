@@ -58,7 +58,6 @@ export class OperationsService {
         card: {
           select: {
             digits: true,
-            type: true,
           },
         },
       },
