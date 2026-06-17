@@ -20,6 +20,7 @@ export class CardService {
   async createCard(userId: number, dto: CreateCardDto) {
     return this.prisma.card.create({
       data: {
+        cardName: dto.cardName,
         digits: dto.digits,
         userId,
         balance: new Prisma.Decimal(dto.balance),
@@ -30,6 +31,7 @@ export class CardService {
     return this.prisma.card.update({
       where: { id: cardId },
       data: {
+        cardName: dto.cardName,
         digits: dto.digits,
         balance:
           dto.balance !== undefined
