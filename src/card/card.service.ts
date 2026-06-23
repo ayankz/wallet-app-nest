@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { UpdateCardDto } from './dto/update-card.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateCardDto } from './dto/create-card.dto';
@@ -18,14 +18,25 @@ export class CardService {
   }
 
   async createCard(userId: number, dto: CreateCardDto) {
-    return this.prisma.card.create({
-      data: {
-        cardName: dto.cardName,
-        digits: dto.digits,
-        userId,
-        balance: new Prisma.Decimal(dto.balance),
-      },
-    });
+    try {
+      return await this.prisma.card.create({
+        data: {
+          cardName: dto.cardName,
+          digits: dto.digits,
+          userId,
+          balance: new Prisma.Decimal(dto.balance),
+        },
+      });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new ConflictException('Такая карта уже существует');
+      }
+
+      throw error;
+    }
   }
   async updateCard(cardId: number, dto: UpdateCardDto) {
     return this.prisma.card.update({
