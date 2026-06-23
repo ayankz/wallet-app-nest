@@ -3,6 +3,7 @@ import { UpdateCardDto } from './dto/update-card.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateCardDto } from './dto/create-card.dto';
 import { Prisma } from '@prisma/client';
+import { mapPrismaError } from 'src/common/mappers/prisma-error.mapper';
 
 @Injectable()
 export class CardService {
@@ -18,27 +19,35 @@ export class CardService {
   }
 
   async createCard(userId: number, dto: CreateCardDto) {
-    return this.prisma.card.create({
-      data: {
-        cardName: dto.cardName,
-        digits: dto.digits,
-        userId,
-        balance: new Prisma.Decimal(dto.balance),
-      },
-    });
+    try {
+      return await this.prisma.card.create({
+        data: {
+          cardName: dto.cardName,
+          digits: dto.digits,
+          userId,
+          balance: new Prisma.Decimal(dto.balance),
+        },
+      });
+    } catch (error) {
+      mapPrismaError(error);
+    }
   }
   async updateCard(cardId: number, dto: UpdateCardDto) {
-    return this.prisma.card.update({
-      where: { id: cardId },
-      data: {
-        cardName: dto.cardName,
-        digits: dto.digits,
-        balance:
-          dto.balance !== undefined
-            ? new Prisma.Decimal(dto.balance)
-            : undefined,
-      },
-    });
+    try {
+      return await this.prisma.card.update({
+        where: { id: cardId },
+        data: {
+          cardName: dto.cardName,
+          digits: dto.digits,
+          balance:
+            dto.balance !== undefined
+              ? new Prisma.Decimal(dto.balance)
+              : undefined,
+        },
+      });
+    } catch (error) {
+      mapPrismaError(error);
+    }
   }
 
   async deleteCard(cardId: number, userId: number) {
