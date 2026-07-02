@@ -11,6 +11,7 @@ import { CategoryModule } from './category/category.module';
 import { CardModule } from './card/card.module';
 import { ConfigModule } from '@nestjs/config';
 import { HealthController } from './health-chech/health.controller';
+import { AccountsModule } from './accounts/accounts.module';
 @Module({
   imports: [
     AuthModule,
@@ -24,6 +25,7 @@ import { HealthController } from './health-chech/health.controller';
       envFilePath:
         process.env.NODE_ENV === 'production' ? '.env.production' : '.env',
     }),
+    AccountsModule,
   ],
   controllers: [AppController, HealthController],
   providers: [
