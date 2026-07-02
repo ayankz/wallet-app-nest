@@ -11,7 +11,10 @@ import { CardService } from './card.service';
 import { CreateCardDto } from './dto/create-card.dto';
 import { UpdateCardDto } from './dto/update-card.dto';
 import { GetCurrentUserId } from 'src/common/decorators';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('cards')
+@ApiBearerAuth()
 @Controller('cards')
 export class CardController {
   constructor(private readonly cardService: CardService) {}

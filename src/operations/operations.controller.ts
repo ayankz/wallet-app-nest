@@ -12,7 +12,10 @@ import { OperationsService } from './operations.service';
 import { GetCurrentUserId } from 'src/common/decorators';
 import { CreateOperationDto } from './dto/create-operation.dto/create-operation.dto';
 import { UpdateOperationDto } from './dto/update-operation.dto/update-operation.dto';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('operations')
+@ApiBearerAuth()
 @Controller('operations')
 export class OperationsController {
   constructor(private readonly operationsService: OperationsService) {}
