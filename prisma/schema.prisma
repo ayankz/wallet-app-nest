@@ -23,7 +23,8 @@ model User {
   hashRt      String?
   Transaction Transaction[]
   Card        Card[]
-
+  accounts     Account[]
+  transfers    Transfer[]
   @@map("users")
 }
 
@@ -75,8 +76,58 @@ model Card {
 
   @@map("cards")
 }
+model Account{
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name  String
+  type AccountType @default(CARD)
+  currency Currency @default(NZD)
+  balance   Decimal  @default(0.0)
+  cardName String?
+  digits String?
+
+  userId       Int
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  transfersFrom  Transfer[]   @relation("fromAccount")  
+  transfersTo   Transfer[] @relation("toAccount")
+
+  @@map("accounts")
+}
+
+model Transfer {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  fromAccountId Int
+  toAccountId   Int
+
+  fromAccount Account @relation("fromAccount", fields: [fromAccountId], references: [id])
+  toAccount   Account @relation("toAccount", fields: [toAccountId], references: [id])
+
+  debitAmount Decimal  @default(0.0)
+  creditAmount Decimal  @default(0.0)
+  comment String?
+
+  userId       Int
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("transfers")
+}
 
 enum TransactionType {
   INCOME
   EXPENSE
+}
+enum Currency {
+  KZT
+  NZD
+  USD
+}
+enum AccountType {
+  CARD
+  CASH
 }
