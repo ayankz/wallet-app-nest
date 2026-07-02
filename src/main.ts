@@ -10,7 +10,6 @@ async function bootstrap() {
   app.useGlobalFilters(new HttpExceptionFilter());
   app.setGlobalPrefix('api');
 
-
   const config = new DocumentBuilder()
     .setTitle('Wallet API')
     .setDescription('Wallet app API')

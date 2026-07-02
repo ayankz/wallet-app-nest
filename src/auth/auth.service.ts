@@ -75,8 +75,7 @@ export class AuthService {
     if (!user) throw new ForbiddenException('User not found');
 
     const passwordMatches = await bcrypt.compare(dto.password, user.hash);
-    if (!passwordMatches)
-      throw new ForbiddenException('Password is incorrect');
+    if (!passwordMatches) throw new ForbiddenException('Password is incorrect');
 
     const tokens = await this.getTokens(user.id, user.email);
     await this.updateRtHash(user.id, tokens.refresh_token);
