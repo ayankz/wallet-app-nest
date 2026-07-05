@@ -1,7 +1,7 @@
 import {
-    BadRequestException,
-    Injectable,
-    NotFoundException,
+  BadRequestException,
+  Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateAccountDto } from './dto/create-account.dto';
@@ -10,47 +10,47 @@ import { mapPrismaError } from 'src/common/mappers/prisma-error.mapper';
 
 @Injectable()
 export class AccountsService {
-    constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
-    async getAccounts(userId: number) {
-        return await this.prisma.account.findMany({
-            where: { userId },
-            orderBy: { createdAt: 'desc' },
-        });
+  async getAccounts(userId: number) {
+    return await this.prisma.account.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async createAccount(userId: number, dto: CreateAccountDto) {
+    if (dto.type === 'CARD' && (!dto.cardName || !dto.digits)) {
+      throw new BadRequestException(
+        'cardName and digits are required for CARD account',
+      );
     }
 
-    async createAccount(userId: number, dto: CreateAccountDto) {
-        if (dto.type === 'CARD' && (!dto.cardName || !dto.digits)) {
-            throw new BadRequestException(
-                'cardName and digits are required for CARD account',
-            );
-        }
-
-        try {
-            return await this.prisma.account.create({
-                data: {
-                    name: dto.name,
-                    type: dto.type,
-                    currency: dto.currency,
-                    cardName: dto.cardName,
-                    digits: dto.digits,
-                    userId,
-                    balance: new Prisma.Decimal(dto.balance),
-                },
-            });
-        } catch (error) {
-            mapPrismaError(error);
-        }
+    try {
+      return await this.prisma.account.create({
+        data: {
+          name: dto.name,
+          type: dto.type,
+          currency: dto.currency,
+          cardName: dto.cardName,
+          digits: dto.digits,
+          userId,
+          balance: new Prisma.Decimal(dto.balance),
+        },
+      });
+    } catch (error) {
+      mapPrismaError(error);
     }
-    async deleteAccount(accountId: number, userId: number) {
-        const result = await this.prisma.account.deleteMany({
-            where: { id: accountId, userId },
-        });
+  }
+  async deleteAccount(accountId: number, userId: number) {
+    const result = await this.prisma.account.deleteMany({
+      where: { id: accountId, userId },
+    });
 
-        if (result.count === 0) {
-            throw new NotFoundException('Account not found');
-        }
-
-        return { message: 'Account deleted' };
+    if (result.count === 0) {
+      throw new NotFoundException('Account not found');
     }
+
+    return { message: 'Account deleted' };
+  }
 }
