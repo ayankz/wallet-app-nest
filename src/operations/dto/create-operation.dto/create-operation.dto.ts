@@ -30,5 +30,5 @@ export class CreateOperationDto {
   @Transform(({ value }) => (value == null || value === '' ? undefined : value))
   @Type(() => Number)
   @IsNumber()
-  cardId?: number;
+  accountId?: number;
 }

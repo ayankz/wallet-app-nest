@@ -35,5 +35,5 @@ export class UpdateOperationDto {
   @Transform(({ value }) => (value === '' ? null : value))
   @Type(() => Number)
   @IsNumber()
-  readonly cardId?: number | null;
+  readonly accountId?: number | null;
 }

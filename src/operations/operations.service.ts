@@ -10,11 +10,11 @@ import { UpdateOperationDto } from './dto/update-operation.dto/update-operation.
 
 @Injectable()
 export class OperationsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async create(userId: number, dto: CreateOperationDto) {
     return this.prisma.$transaction(async (tx) => {
-      await this.assertCardOwnership(tx, dto.cardId, userId);
+      await this.assertAccountOwnership(tx, dto.accountId, userId);
       await this.assertCategoryCompatibility(tx, dto.categoryId, dto.type);
 
       const transaction = await tx.transaction.create({
@@ -24,9 +24,9 @@ export class OperationsService {
         },
       });
 
-      await this.applyCardBalanceChange(
+      await this.applyAccountBalanceChange(
         tx,
-        dto.cardId,
+        dto.accountId,
         this.getSignedAmount(dto.type, dto.amount),
       );
 
@@ -44,8 +44,11 @@ export class OperationsService {
             name: true,
           },
         },
-        card: {
+        account: {
           select: {
+            name: true,
+            type: true,
+            currency: true,
             digits: true,
           },
         },
@@ -75,10 +78,10 @@ export class OperationsService {
         dto.categoryId === undefined
           ? existingTransaction.categoryId
           : dto.categoryId;
-      const nextCardId =
-        dto.cardId === undefined ? existingTransaction.cardId : dto.cardId;
+      const nextAccountId =
+        dto.accountId === undefined ? existingTransaction.accountId : dto.accountId;
 
-      await this.assertCardOwnership(tx, nextCardId, userId);
+      await this.assertAccountOwnership(tx, nextAccountId, userId);
       await this.assertCategoryCompatibility(tx, nextCategoryId, nextType);
 
       await tx.transaction.update({
@@ -86,10 +89,10 @@ export class OperationsService {
         data: dto,
       });
 
-      await this.syncCardBalancesAfterUpdate(tx, existingTransaction, {
+      await this.syncAccountBalancesAfterUpdate(tx, existingTransaction, {
         type: nextType,
         amount: nextAmount,
-        cardId: nextCardId,
+        accountId: nextAccountId,
       });
 
       return { message: 'Transaction updated' };
@@ -110,9 +113,9 @@ export class OperationsService {
         where: { id: existingTransaction.id },
       });
 
-      await this.applyCardBalanceChange(
+      await this.applyAccountBalanceChange(
         tx,
-        existingTransaction.cardId,
+        existingTransaction.accountId,
         -this.getSignedAmount(
           existingTransaction.type,
           existingTransaction.amount,
@@ -123,21 +126,21 @@ export class OperationsService {
     });
   }
 
-  private async assertCardOwnership(
+  private async assertAccountOwnership(
     tx: Prisma.TransactionClient,
-    cardId: number | null | undefined,
+    accountId: number | null | undefined,
     userId: number,
   ) {
-    if (cardId == null) {
+    if (accountId == null) {
       return;
     }
 
-    const card = await tx.card.findFirst({
-      where: { id: cardId, userId },
+    const account = await tx.account.findFirst({
+      where: { id: accountId, userId },
     });
 
-    if (!card) {
-      throw new NotFoundException('Card not found');
+    if (!account) {
+      throw new NotFoundException('Account not found');
     }
   }
 
@@ -165,17 +168,17 @@ export class OperationsService {
     }
   }
 
-  private async syncCardBalancesAfterUpdate(
+  private async syncAccountBalancesAfterUpdate(
     tx: Prisma.TransactionClient,
     existingTransaction: {
       type: TransactionType;
       amount: number;
-      cardId: number | null;
+      accountId: number | null;
     },
     nextTransaction: {
       type: TransactionType;
       amount: number;
-      cardId: number | null;
+      accountId: number | null;
     },
   ) {
     const previousSignedAmount = this.getSignedAmount(
@@ -187,38 +190,38 @@ export class OperationsService {
       nextTransaction.amount,
     );
 
-    if (existingTransaction.cardId === nextTransaction.cardId) {
-      await this.applyCardBalanceChange(
+    if (existingTransaction.accountId === nextTransaction.accountId) {
+      await this.applyAccountBalanceChange(
         tx,
-        nextTransaction.cardId,
+        nextTransaction.accountId,
         nextSignedAmount - previousSignedAmount,
       );
       return;
     }
 
-    await this.applyCardBalanceChange(
+    await this.applyAccountBalanceChange(
       tx,
-      existingTransaction.cardId,
+      existingTransaction.accountId,
       -previousSignedAmount,
     );
-    await this.applyCardBalanceChange(
+    await this.applyAccountBalanceChange(
       tx,
-      nextTransaction.cardId,
+      nextTransaction.accountId,
       nextSignedAmount,
     );
   }
 
-  private async applyCardBalanceChange(
+  private async applyAccountBalanceChange(
     tx: Prisma.TransactionClient,
-    cardId: number | null | undefined,
+    accountId: number | null | undefined,
     signedAmount: number,
   ) {
-    if (cardId == null || signedAmount === 0) {
+    if (accountId == null || signedAmount === 0) {
       return;
     }
 
-    await tx.card.update({
-      where: { id: cardId },
+    await tx.account.update({
+      where: { id: accountId },
       data: {
         balance:
           signedAmount > 0

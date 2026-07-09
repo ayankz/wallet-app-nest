@@ -8,7 +8,6 @@ import { AppService } from './app.service';
 import { OperationsModule } from './operations/operations.module';
 import { CategoryModule } from './category/category.module';
 // import { StatementsModule } from './statements/statements/statements.module';
-import { CardModule } from './card/card.module';
 import { ConfigModule } from '@nestjs/config';
 import { HealthController } from './health-chech/health.controller';
 import { AccountsModule } from './accounts/accounts.module';
@@ -20,7 +19,6 @@ import { TransferModule } from './transfers/transfer.module';
     OperationsModule,
     CategoryModule,
     // StatementsModule,
-    CardModule,
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath:
@@ -38,4 +36,4 @@ import { TransferModule } from './transfers/transfer.module';
     },
   ],
 })
-export class AppModule {}
+export class AppModule { }
