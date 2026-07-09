@@ -65,4 +65,55 @@ export class TransferService {
       });
     });
   }
+
+  async getTransfers(userId: number) {
+    return this.prisma.transfer.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        fromAccount: {
+          select: {
+            id: true,
+            name: true,
+            currency: true,
+          },
+        },
+        toAccount: {
+          select: {
+            id: true,
+            name: true,
+            currency: true,
+          },
+        },
+      },
+    });
+  }
+
+  async getTransferById(id: number, userId: number) {
+    const transfer = await this.prisma.transfer.findFirst({
+      where: { id, userId },
+      include: {
+        fromAccount: {
+          select: {
+            id: true,
+            name: true,
+            currency: true,
+          },
+        },
+        toAccount: {
+          select: {
+            id: true,
+            name: true,
+            currency: true,
+          },
+        },
+      },
+    });
+
+    if (!transfer) {
+      throw new NotFoundException('Transfer not found');
+    }
+
+    return transfer;
+  }
 }
