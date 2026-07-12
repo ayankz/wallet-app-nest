@@ -6,11 +6,13 @@ import {
   Param,
   Delete,
   Query,
+  ParseEnumPipe,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { TransactionType } from '@prisma/client';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('category')
 @ApiBearerAuth()
@@ -24,13 +26,20 @@ export class CategoryController {
   }
 
   @Get()
-  findAll(@Query('type') type?: TransactionType) {
-    console.log('Fetching categories with type:', type);
+  @ApiQuery({
+    name: 'type',
+    enum: TransactionType,
+    required: false,
+  })
+  findAll(
+    @Query('type', new ParseEnumPipe(TransactionType, { optional: true }))
+    type?: TransactionType,
+  ) {
     return this.categoryService.findAll(type);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.categoryService.delete(+id);
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.categoryService.delete(id);
   }
 }
