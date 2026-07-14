@@ -14,7 +14,7 @@ export class AccountsService {
 
   async getAccounts(userId: number) {
     return await this.prisma.account.findMany({
-      where: { userId },
+      where: { userId, isArchived: false },
       orderBy: { createdAt: 'desc' },
     });
   }
@@ -43,14 +43,18 @@ export class AccountsService {
     }
   }
   async deleteAccount(accountId: number, userId: number) {
-    const result = await this.prisma.account.deleteMany({
-      where: { id: accountId, userId },
+    const result = await this.prisma.account.updateMany({
+      where: { id: accountId, userId, isArchived: false },
+      data: {
+        isArchived: true,
+        archivedAt: new Date(),
+      },
     });
 
     if (result.count === 0) {
       throw new NotFoundException('Account not found');
     }
 
-    return { message: 'Account deleted' };
+    return { message: 'Account archived' };
   }
 }

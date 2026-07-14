@@ -18,11 +18,11 @@ export class TransferService {
 
     return this.prisma.$transaction(async (tx) => {
       const fromAccount = await tx.account.findFirst({
-        where: { id: data.fromAccountId, userId },
+        where: { id: data.fromAccountId, userId, isArchived: false },
       });
 
       const toAccount = await tx.account.findFirst({
-        where: { id: data.toAccountId, userId },
+        where: { id: data.toAccountId, userId, isArchived: false },
       });
 
       const debitAmount = new Prisma.Decimal(data.debitAmount);

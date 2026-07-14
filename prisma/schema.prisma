@@ -73,6 +73,8 @@ model Account{
   balance   Decimal  @default(0.0)
   cardName String?
   digits String?
+  isArchived Boolean @default(false)
+  archivedAt DateTime?
 
   userId       Int
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)

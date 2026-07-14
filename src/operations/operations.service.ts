@@ -137,7 +137,7 @@ export class OperationsService {
     }
 
     const account = await tx.account.findFirst({
-      where: { id: accountId, userId },
+      where: { id: accountId, userId, isArchived: false },
     });
 
     if (!account) {
@@ -226,7 +226,7 @@ export class OperationsService {
         where: { id: accountId },
       });
 
-      if (!account) {
+      if (!account || account.isArchived) {
         throw new NotFoundException('Account not found');
       }
 
