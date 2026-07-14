@@ -7,12 +7,16 @@ import {
   Delete,
   ParseIntPipe,
   Patch,
+  Query,
 } from '@nestjs/common';
 import { OperationsService } from './operations.service';
 import { GetCurrentUserId } from 'src/common/decorators';
 import { CreateOperationDto } from './dto/create-operation.dto/create-operation.dto';
 import { UpdateOperationDto } from './dto/update-operation.dto/update-operation.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import {
+  OperationsOverviewRangeQueryDto,
+} from './dto/operations-overview-range-query.dto/operations-overview-range-query.dto';
 
 @ApiTags('operations')
 @ApiBearerAuth()
@@ -23,6 +27,19 @@ export class OperationsController {
   @Get()
   findAll(@GetCurrentUserId() userId: number) {
     return this.operationsService.findAll(userId);
+  }
+
+  @Get('overview')
+  getOverview(@GetCurrentUserId() userId: number) {
+    return this.operationsService.getOverview(userId);
+  }
+
+  @Get('overview/range')
+  getOverviewByRange(
+    @GetCurrentUserId() userId: number,
+    @Query() query: OperationsOverviewRangeQueryDto,
+  ) {
+    return this.operationsService.getOverviewByRange(userId, query);
   }
 
   @Get(':id')
