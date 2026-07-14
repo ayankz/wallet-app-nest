@@ -121,6 +121,10 @@ export class AuthService {
     });
   }
   async refreshTokens(userId: number, rt: string) {
+    if (!userId || !rt) {
+      throw new ForbiddenException('Access Denied');
+    }
+
     const user = await this.prisma.user.findUnique({
       where: {
         id: userId,

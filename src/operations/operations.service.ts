@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -218,6 +219,22 @@ export class OperationsService {
   ) {
     if (accountId == null || signedAmount === 0) {
       return;
+    }
+
+    if (signedAmount < 0) {
+      const account = await tx.account.findUnique({
+        where: { id: accountId },
+      });
+
+      if (!account) {
+        throw new NotFoundException('Account not found');
+      }
+
+      const debitAmount = new Prisma.Decimal(Math.abs(signedAmount));
+
+      if (account.balance.lessThan(debitAmount)) {
+        throw new BadRequestException('Insufficient funds in the account');
+      }
     }
 
     await tx.account.update({
