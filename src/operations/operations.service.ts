@@ -4,10 +4,13 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma, TransactionType } from '@prisma/client';
+import { Currency, Prisma, TransactionType } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateOperationDto } from './dto/create-operation.dto/create-operation.dto';
 import { UpdateOperationDto } from './dto/update-operation.dto/update-operation.dto';
+import {
+  OperationsOverviewRangeQueryDto,
+} from './dto/operations-overview-range-query.dto/operations-overview-range-query.dto';
 
 @Injectable()
 export class OperationsService {
@@ -55,6 +58,80 @@ export class OperationsService {
         },
       },
     });
+  }
+
+  async getOverview(userId: number) {
+    const weekRange = this.getWeekRange();
+    const monthRange = this.getMonthRange();
+
+    return {
+      week: await this.buildOverview(userId, weekRange.from, weekRange.to),
+      month: await this.buildOverview(userId, monthRange.from, monthRange.to),
+    };
+  }
+
+  async getOverviewByRange(
+    userId: number,
+    query: OperationsOverviewRangeQueryDto,
+  ) {
+    const { from, to } = this.resolveCustomRange(query);
+
+    return this.buildOverview(userId, from, to);
+  }
+
+  private async buildOverview(userId: number, from: Date, to: Date) {
+
+    const transactions = await this.prisma.transaction.findMany({
+      where: {
+        userId,
+        accountId: { not: null },
+        createdAt: {
+          gte: from,
+          lte: to,
+        },
+      },
+      select: {
+        type: true,
+        amount: true,
+        account: {
+          select: {
+            currency: true,
+          },
+        },
+      },
+    });
+
+    const totals = Object.values(Currency).map((currency) => ({
+      currency,
+      income: 0,
+      expense: 0,
+    }));
+
+    for (const transaction of transactions) {
+      const currency = transaction.account?.currency;
+
+      if (!currency) {
+        continue;
+      }
+
+      const currencyTotals = totals.find((item) => item.currency === currency);
+
+      if (!currencyTotals) {
+        continue;
+      }
+
+      if (transaction.type === 'INCOME') {
+        currencyTotals.income += transaction.amount;
+      } else {
+        currencyTotals.expense += transaction.amount;
+      }
+    }
+
+    return {
+      from: from.toISOString(),
+      to: to.toISOString(),
+      totals,
+    };
   }
 
   async findOne(id: number, userId: number) {
@@ -250,5 +327,55 @@ export class OperationsService {
 
   private getSignedAmount(type: TransactionType, amount: number) {
     return type === 'INCOME' ? amount : -amount;
+  }
+
+  private resolveCustomRange(query: OperationsOverviewRangeQueryDto) {
+    const { dateFrom, dateTo } = query;
+
+    if (!dateFrom || !dateTo) {
+      throw new BadRequestException(
+        'dateFrom and dateTo are required for a custom range',
+      );
+    }
+
+    const from = new Date(dateFrom);
+    const to = new Date(dateTo);
+
+    if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime())) {
+      throw new BadRequestException('Invalid date range');
+    }
+
+    from.setHours(0, 0, 0, 0);
+    to.setHours(23, 59, 59, 999);
+
+    if (from > to) {
+      throw new BadRequestException('dateFrom must be before dateTo');
+    }
+
+    return { from, to };
+  }
+
+  private getWeekRange() {
+    const now = new Date();
+    const to = new Date(now);
+    to.setHours(23, 59, 59, 999);
+
+    const from = new Date(now);
+    from.setHours(0, 0, 0, 0);
+    from.setDate(now.getDate() - 6);
+
+    return { from, to };
+  }
+
+  private getMonthRange() {
+    const now = new Date();
+    const to = new Date(now);
+    to.setHours(23, 59, 59, 999);
+
+    const from = new Date(now);
+    from.setHours(0, 0, 0, 0);
+    from.setDate(1);
+
+    return { from, to };
   }
 }
