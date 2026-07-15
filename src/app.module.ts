@@ -12,6 +12,8 @@ import { ConfigModule } from '@nestjs/config';
 import { HealthController } from './health-chech/health.controller';
 import { AccountsModule } from './accounts/accounts.module';
 import { TransferModule } from './transfers/transfer.module';
+import { UpcomingPaymentsModule } from './upcoming-payments/upcoming-payments.module';
+import { ScheduleModule } from '@nestjs/schedule';
 @Module({
   imports: [
     AuthModule,
@@ -19,6 +21,7 @@ import { TransferModule } from './transfers/transfer.module';
     OperationsModule,
     CategoryModule,
     // StatementsModule,
+    ScheduleModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath:
@@ -26,6 +29,7 @@ import { TransferModule } from './transfers/transfer.module';
     }),
     AccountsModule,
     TransferModule,
+    UpcomingPaymentsModule,
   ],
   controllers: [AppController, HealthController],
   providers: [
