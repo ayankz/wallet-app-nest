@@ -59,6 +59,26 @@ export class UpcomingPaymentsService {
       },
     });
   }
+
+  async archiveUpcomingPayment(id: number, userId: number) {
+    const result = await this.prisma.upcomingPayment.updateMany({
+      where: {
+        id,
+        userId,
+        isActive: true,
+      },
+      data: {
+        isActive: false,
+      },
+    });
+
+    if (result.count === 0) {
+      throw new NotFoundException('Upcoming payment not found');
+    }
+
+    return { message: 'Upcoming payment archived' };
+  }
+
   @Cron('0 1 * * *')
   async updateUpcomingPaymentsSchedule() {
     const now = new Date();

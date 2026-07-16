@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { GetCurrentUserId } from 'src/common/decorators';
 import { CreateUpcomingPaymentDto } from './dto/create-upcoming-payments.dto/create-upcoming-payments.dto';
@@ -23,5 +23,13 @@ export class UpcomingPaymentsController {
     @Body() dto: CreateUpcomingPaymentDto,
   ) {
     return this.upcomingPaymentsService.createUpcomingPayment(userId, dto);
+  }
+
+  @Patch(':id/archive')
+  archiveUpcomingPayment(
+    @Param('id', ParseIntPipe) id: number,
+    @GetCurrentUserId() userId: number,
+  ) {
+    return this.upcomingPaymentsService.archiveUpcomingPayment(id, userId);
   }
 }
